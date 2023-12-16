@@ -1,10 +1,16 @@
+import sys
 import random
+import time
 import pygame
 from blockClass import *
 from buttonClass import *
 from sliderClass import *
+from queueClass import *
 pygame.init()
 from pygame.locals import QUIT
+
+print(sys.getrecursionlimit())
+sys.setrecursionlimit(1500)
 
 WHITE = (255,255,255)
 BLACK = (0,0,0)
@@ -52,16 +58,37 @@ def init_canvas():
             coords.append((i,j))
 
 
-def fill_bucket(r,c,currentclr):
-    if (r,c) not in coords or layer[coords.index((r,c))].clr != currentclr:
+# def fill_bucket(r,c,currentcolour):
+#     #WITH DFS
+#     if (r,c) not in coords:
+#         print('out of bounds')
+#         return
+#     elif layer[coords.index((r,c))].clr != currentcolour:
+#         print('different colour')
+#         return
+#     else: 
+#         layer[coords.index((r,c))].clr = currentClr
+#         directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
+#         for newr,newc in directions:
+#             if (newr,newc) in coords and layer[coords.index((newr,newc))].clr == currentcolour:
+#                 fill_bucket(newr,newc,currentcolour)
+
+def fill_bucket(r,c,currentcolour):
+    #WITH BFS
+    if currentcolour == currentClr:
         return
-    
-    else: 
-        layer[coords.index((r,c))].clr = currentClr
-        fill_bucket(r-1,c,currentclr)
-        fill_bucket(r,c+1,currentclr)
-        fill_bucket(r+1,c,currentclr)
-        fill_bucket(r,c-1,currentclr)
+    q = Queue()
+    q.enqueue((r,c))
+    while not q.isEmpty():
+        r,c = q.dequeue()
+        if (r,c) not in coords or layer[coords.index((r,c))].clr != currentcolour:
+            continue
+        else:
+            layer[coords.index((r,c))].clr = currentClr
+            directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
+            for newr,newc in directions:
+                q.enqueue((newr,newc))
+
 
 def reset_all_buttons(buttonlist, currentbutton):
     for button in buttonlist:
@@ -74,15 +101,14 @@ layer = []
 coords = []
 
 #values
-gridsize = 20
+gridsize = 10
 width = 800
 height = 500
 canvasw = 600
 canvash = 400
 horzMargin = (width-canvasw)//2
 vertMargin = (height-canvash)//2
-print(horzMargin)
-print(vertMargin)
+print('number of pixels:', (canvash//gridsize) * (canvasw//gridsize))
 
 screen = pygame.display.set_mode((width, height))
 inGame = True
@@ -110,10 +136,6 @@ eyedropper = Button(25,275,50,50, dropperimg)
 buttons = [pencil,eraser,bucket,eyedropper]
 pencil.click_button(25,50)
 
-print(horzMargin//gridsize)
-print((canvasw//gridsize) + horzMargin//gridsize)
-print(vertMargin//gridsize)
-print((canvash//gridsize) + vertMargin//gridsize)
 
 ###### MAIN LOOP #######
 while inGame:
