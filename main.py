@@ -81,20 +81,13 @@ def fill_bucket(r,c,currentcolour):
     q.enqueue((r,c))
     while not q.isEmpty():
         r,c = q.dequeue()
-        if (r,c) not in coords or layer[coords.index((r,c))].clr != currentcolour:
-            continue
-        else:
+        if (r,c) in coords and layer[coords.index((r,c))].clr == currentcolour:
             layer[coords.index((r,c))].clr = currentClr
             directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
             for newr,newc in directions:
                 q.enqueue((newr,newc))
 
 
-def reset_all_buttons(buttonlist, currentbutton):
-    for button in buttonlist:
-        if button != currentbutton:
-            button.clear_button()
-    
 
 ######## GLOBAL GAME VARIABLES ########## 
 layer = []
@@ -114,10 +107,10 @@ screen = pygame.display.set_mode((width, height))
 inGame = True
 
 drawing = False
-usingEraser = False
-usingDropper = False
-clicking = False
 currentClr = BLACK
+
+clicking = False
+
 fill = False
 
 ctrl = False
@@ -147,7 +140,7 @@ while inGame:
             pygame.quit()
 
         #fill bucket usage
-        if event.type == pygame.MOUSEBUTTONDOWN and fill:
+        if event.type == pygame.MOUSEBUTTONDOWN and bucket.isUsed:
             if (mousey//gridsize,mousex//gridsize) in coords:
                 print('FILL IT')
                 colour_now = layer[coords.index((mousey//gridsize,mousex//gridsize))].clr
@@ -155,67 +148,59 @@ while inGame:
                 fill_bucket(mousey//gridsize,mousex//gridsize, colour_now)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if usingDropper:
-                # print('dropped')
-                # currentClr = layer[coords.index((mousey//gridsize,mousex//gridsize))].clr
-                usingDropper = False
-            drawing = True
-            if mousex > horzMargin + canvasw:
-                clicking = True
+            #if mouse outside of canvas (used to access ui sliders)
+            # if mousex > horzMargin + canvasw:
+            clicking = True
+
             if bucket.click_button(mousex,mousey):
-                fill = True
-                usingEraser = False
                 print('fill bucket')
-                reset_all_buttons(buttons,bucket)
+                bucket.deactivate_others(buttons)
+
             if pencil.click_button(mousex,mousey):
                 print('pencil')
-                currentClr = BLACK
-                usingEraser = False
-                fill = False
-                reset_all_buttons(buttons,pencil)
+                pencil.deactivate_others(buttons)
+
             if eraser.click_button(mousex,mousey):
                 print('eraser')
-                # currentClr = WHITE
-                drawing = False
-                usingEraser = True
-                fill = False
-                reset_all_buttons(buttons,eraser)
+                eraser.deactivate_others(buttons)
+
             if eyedropper.click_button(mousex,mousey):
-                usingDropper = True
                 print('eyedropper')
-                reset_all_buttons(buttons,eyedropper)
-            
+                eyedropper.deactivate_others(buttons)
+
+        
+        # ctrl-s to save
         if pressed[pygame.K_LCTRL]:
             ctrl = True
         
         if ctrl and pressed[pygame.K_s]:
             print('save')
             ctrl = False
-            pygame.image.save(screen,'newimage.png')
+            # pygame.image.save(screen,'newimage.png')
             
 
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
-            drawing = False
             clicking = False
-            # print('not drawing')
 
-    #NEEDS FIXING ################
-
-    if drawing:
-        if (mousey//gridsize,mousex//gridsize) in coords:
-            layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = currentClr
-            # print(mousey//gridsize,mousex//gridsize)
-            # print('drawing rn')
-    
-    if usingEraser and drawing:
-        if (mousey//gridsize,mousex//gridsize) in coords:
-            layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = WHITE
+    if clicking:
+        if pencil.isUsed:
+            if (mousey//gridsize,mousex//gridsize) in coords:
+                layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = currentClr
+                # print(mousey//gridsize,mousex//gridsize)
+                # print('drawing rn')
+        
+        if eraser.isUsed:
+            if (mousey//gridsize,mousex//gridsize) in coords:
+                layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = WHITE
 
 
+    #mouse detection for colour sliders
     red_slider.detect_mouse(clicking, mousex, mousey)
     green_slider.detect_mouse(clicking, mousex, mousey)
     blue_slider.detect_mouse(clicking, mousex, mousey)
+
+    #changes current colour based on values from sliders
     clrlist = list(currentClr)
     clrlist[0] = red_slider.change_clr()
     clrlist[1] = green_slider.change_clr()

@@ -1,6 +1,6 @@
 import pygame
 class Button():
-    def __init__(self,x,y,w,h,img = None):
+    def __init__(self,x,y,w,h,img = None, isUsed=False):
         self.x = x
         self.y = y
         self.w = w
@@ -8,6 +8,7 @@ class Button():
         self.img = img
         self.box = pygame.Rect(x,y,w,h)
         self.clr = (40,40,45)
+        self.isUsed = isUsed
 
     def draw_button(self,screen):
         pygame.draw.rect(screen,self.clr,self.box)
@@ -16,7 +17,11 @@ class Button():
     def click_button(self,mx,my):
         if self.box.collidepoint(mx,my):
             self.clr = (90,90,95)
+            self.isUsed = True
             return True
-    
-    def clear_button(self):
-        self.clr = (40,40,45)
+
+    def deactivate_others(self, listOfButtons):
+        for button in listOfButtons:
+            if button != self:
+                button.clr = (40,40,45)
+                button.isUsed = False
