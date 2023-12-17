@@ -22,13 +22,13 @@ class Slider():
             elif self.mx > self.left + self.width:
                 self.mx = self.left + self.width
     
-    def change_clr(self, isclr = False):
-        proportion = self.width / 255
-        increase = (self.mx - self.left) / proportion
+    def change_clr(self):
+        self.proportion = self.width / 255
+        increase = (self.mx - self.left) / self.proportion
+        return increase
 
-        if isclr:
-            return [increase,increase,increase]
-        else:
-            return increase
+        
+    def set_clr(self,RGB_value):
+        self.mx = RGB_value * self.proportion + self.left
 
 

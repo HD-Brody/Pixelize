@@ -106,13 +106,8 @@ print('number of pixels:', (canvash//gridsize) * (canvasw//gridsize))
 screen = pygame.display.set_mode((width, height))
 inGame = True
 
-drawing = False
 currentClr = BLACK
-
 clicking = False
-
-fill = False
-
 ctrl = False
 
 init_canvas()
@@ -139,17 +134,7 @@ while inGame:
         if event.type == QUIT:
             pygame.quit()
 
-        #fill bucket usage
-        if event.type == pygame.MOUSEBUTTONDOWN and bucket.isUsed:
-            if (mousey//gridsize,mousex//gridsize) in coords:
-                print('FILL IT')
-                colour_now = layer[coords.index((mousey//gridsize,mousex//gridsize))].clr
-                print(colour_now)
-                fill_bucket(mousey//gridsize,mousex//gridsize, colour_now)
-
         if event.type == pygame.MOUSEBUTTONDOWN:
-            #if mouse outside of canvas (used to access ui sliders)
-            # if mousex > horzMargin + canvasw:
             clicking = True
 
             if bucket.click_button(mousex,mousey):
@@ -183,16 +168,21 @@ while inGame:
         if event.type == pygame.MOUSEBUTTONUP:
             clicking = False
 
-    if clicking:
+    if clicking and (mousey//gridsize,mousex//gridsize) in coords:
         if pencil.isUsed:
-            if (mousey//gridsize,mousex//gridsize) in coords:
-                layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = currentClr
-                # print(mousey//gridsize,mousex//gridsize)
-                # print('drawing rn')
+            layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = currentClr
         
         if eraser.isUsed:
-            if (mousey//gridsize,mousex//gridsize) in coords:
-                layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = WHITE
+            layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = WHITE
+
+        if bucket.isUsed:
+            colour_now = layer[coords.index((mousey//gridsize,mousex//gridsize))].clr
+            fill_bucket(mousey//gridsize,mousex//gridsize, colour_now)
+
+        if eyedropper.isUsed:
+            red_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[0])
+            green_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[1])
+            blue_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[2])
 
 
     #mouse detection for colour sliders
@@ -201,11 +191,7 @@ while inGame:
     blue_slider.detect_mouse(clicking, mousex, mousey)
 
     #changes current colour based on values from sliders
-    clrlist = list(currentClr)
-    clrlist[0] = red_slider.change_clr()
-    clrlist[1] = green_slider.change_clr()
-    clrlist[2] = blue_slider.change_clr()
-    currentClr = tuple(clrlist)
+    currentClr = (red_slider.change_clr(), green_slider.change_clr(), blue_slider.change_clr())
         
     redraw(screen,width,height,layer)
     clock.tick(framerate)
