@@ -23,6 +23,7 @@ class Slider():
                 self.mx = self.left + self.width
     
     def change_clr(self):
+        #set proportion between slider width and 255(rgb max value)
         self.proportion = self.width / 255
         increase = (self.mx - self.left) / self.proportion
         return increase

@@ -36,21 +36,26 @@ dropperimg = pygame.transform.scale(dropperimg,(50,50))
 ######## FUNCTIONS ########
 def redraw(screen, width, height, layer):
     screen.fill((70, 70, 70))
+    #draws all pixels in canvas
     for tile in layer:
         tile.draw_block()
+    #draws all buttons in ui
     for button in buttons:
         button.draw_button(screen)
 
+    #draws colour box that displays current colour
     colour_box = pygame.Rect(horzMargin+canvasw+horzMargin//4,50,50,50)
     pygame.draw.rect(screen,currentClr,colour_box)
     pygame.draw.rect(screen,BLACK,colour_box,2)
 
+    #draws sliders
     red_slider.draw_slider(screen, 5)
     green_slider.draw_slider(screen, 5)
     blue_slider.draw_slider(screen, 5)
     pygame.display.update()
 
 def init_canvas():
+    #creates a white canvas of block objects
     for i in range(vertMargin//gridsize, (canvash//gridsize) + vertMargin//gridsize):
         for j in range(horzMargin//gridsize,(canvasw//gridsize) + horzMargin//gridsize):
             block = Square(i,j,WHITE,screen, gridsize)
@@ -75,25 +80,31 @@ def init_canvas():
 
 def fill_bucket(r,c,currentcolour):
     #WITH BFS
+    #if clicked on same colour as current, return
     if currentcolour == currentClr:
         return
     q = Queue()
     q.enqueue((r,c))
     while not q.isEmpty():
+        #remove head node of queue
         r,c = q.dequeue()
+        # if coord is in bounds and colour is unfilled
         if (r,c) in coords and layer[coords.index((r,c))].clr == currentcolour:
+            #change colour
             layer[coords.index((r,c))].clr = currentClr
             directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
+            #enqueue all directions to queue
             for newr,newc in directions:
                 q.enqueue((newr,newc))
 
 
+init_canvas()
 
 ######## GLOBAL GAME VARIABLES ########## 
 layer = []
 coords = []
 
-#values
+#int values
 gridsize = 10
 width = 800
 height = 500
@@ -104,14 +115,14 @@ vertMargin = (height-canvash)//2
 print('number of pixels:', (canvash//gridsize) * (canvasw//gridsize))
 
 screen = pygame.display.set_mode((width, height))
-inGame = True
 
+#bools and misc
 currentClr = BLACK
+inGame = True
 clicking = False
 ctrl = False
 
-init_canvas()
-
+#sliders
 red_slider = Slider(horzMargin+canvasw+horzMargin//6, 120, horzMargin-horzMargin//3, RED)
 green_slider = Slider(horzMargin+canvasw+horzMargin//6, 150, horzMargin-horzMargin//3, GREEN)
 blue_slider = Slider(horzMargin+canvasw+horzMargin//6, 180, horzMargin-horzMargin//3, BLUE)
@@ -134,6 +145,7 @@ while inGame:
         if event.type == QUIT:
             pygame.quit()
 
+        # used to check if buttons are pressed
         if event.type == pygame.MOUSEBUTTONDOWN:
             clicking = True
 
@@ -161,25 +173,31 @@ while inGame:
         if ctrl and pressed[pygame.K_s]:
             print('save')
             ctrl = False
-            # pygame.image.save(screen,'newimage.png')
+            pygame.image.save(screen,'newimage.png')
             
 
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
             clicking = False
 
+    #is mouse is clicked and position in canvas bounds
     if clicking and (mousey//gridsize,mousex//gridsize) in coords:
+
         if pencil.isUsed:
+            #draw using current colour
             layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = currentClr
         
         if eraser.isUsed:
+            #draw using white
             layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = WHITE
 
         if bucket.isUsed:
+            #screenshot colour before fill and pass it into function
             colour_now = layer[coords.index((mousey//gridsize,mousex//gridsize))].clr
             fill_bucket(mousey//gridsize,mousex//gridsize, colour_now)
 
         if eyedropper.isUsed:
+            #set new positions of all sliders based on RBG
             red_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[0])
             green_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[1])
             blue_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[2])

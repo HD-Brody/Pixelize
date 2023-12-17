@@ -21,6 +21,7 @@ class Button():
             return True
 
     def deactivate_others(self, listOfButtons):
+        #make booleans of other buttons false and reset colour
         for button in listOfButtons:
             if button != self:
                 button.clr = (40,40,45)
