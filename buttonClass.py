@@ -12,17 +12,19 @@ class Button():
 
     def draw_button(self,screen):
         pygame.draw.rect(screen,self.clr,self.box)
-        screen.blit(self.img,(self.x,self.y))
+        if self.img:
+            screen.blit(self.img,(self.x,self.y))
     
-    def click_button(self,mx,my):
+    def click_button(self,mx,my, ownLogic = False):
         if self.box.collidepoint(mx,my):
-            self.clr = (90,90,95)
-            self.isUsed = True
+            if not ownLogic:
+                self.clr = (90,90,95)
+                self.isUsed = True
             return True
 
     def deactivate_others(self, listOfButtons):
         #make booleans of other buttons false and reset colour
         for button in listOfButtons:
-            if button != self:
+            if button != self and button.isUsed:
                 button.clr = (40,40,45)
                 button.isUsed = False

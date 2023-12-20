@@ -9,4 +9,5 @@ class Square():
         self.square = pygame.Rect((self.col * size, self.row * size), (size, size))
     
     def draw_block(self):
-        pygame.draw.rect(self.screen, self.clr, self.square)
+        if self.clr != (255,255,255):
+            pygame.draw.rect(self.screen, self.clr, self.square)

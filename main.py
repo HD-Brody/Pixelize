@@ -24,24 +24,35 @@ clock = pygame.time.Clock()
 framerate = 1000
 
 ###### IMAGES ######
-pencilimg = pygame.image.load('Photoshop\pencil.png')
+pencilimg = pygame.image.load('.\pencil.png')
 pencilimg = pygame.transform.scale(pencilimg,(50,50))
-eraserimg = pygame.image.load('Photoshop\eraser.png')
+eraserimg = pygame.image.load('.\eraser.png')
 eraserimg = pygame.transform.scale(eraserimg,(50,50))
-fillimg = pygame.image.load('Photoshop\ebucket.png')
+fillimg = pygame.image.load('.\ebucket.png')
 fillimg = pygame.transform.scale(fillimg,(50,50))
-dropperimg = pygame.image.load('Photoshop\eyedropper.png')
+dropperimg = pygame.image.load('.\eyedropper.png')
 dropperimg = pygame.transform.scale(dropperimg,(50,50))
+eyeimg = pygame.image.load('.\eye.png')
+eyeimg = pygame.transform.scale(eyeimg,(25,25))
+
 
 ######## FUNCTIONS ########
-def redraw(screen, width, height, layer):
+def redraw(screen, width, height, layerList):
     screen.fill((70, 70, 70))
+    pygame.draw.rect(screen, WHITE, (horzMargin,vertMargin,canvasw,canvash))
     #draws all pixels in canvas
-    for tile in layer:
-        tile.draw_block()
+    for i in range(len(layerList)):
+        if layerVisibleButtons[i].isUsed:
+            for block in layerList[i]:
+                block.draw_block()
+
     #draws all buttons in ui
     for button in buttons:
         button.draw_button(screen)
+    for lay in layerButtons:
+        lay.draw_button(screen)
+    for vis in layerVisibleButtons:
+        vis.draw_button(screen)
 
     #draws colour box that displays current colour
     colour_box = pygame.Rect(horzMargin+canvasw+horzMargin//4,50,50,50)
@@ -54,29 +65,17 @@ def redraw(screen, width, height, layer):
     blue_slider.draw_slider(screen, 5)
     pygame.display.update()
 
-def init_canvas():
-    #creates a white canvas of block objects
+
+def create_new_layer():
+    layer = []
+    coord = []
     for i in range(vertMargin//gridsize, (canvash//gridsize) + vertMargin//gridsize):
         for j in range(horzMargin//gridsize,(canvasw//gridsize) + horzMargin//gridsize):
             block = Square(i,j,WHITE,screen, gridsize)
             layer.append(block)
-            coords.append((i,j))
-
-
-# def fill_bucket(r,c,currentcolour):
-#     #WITH DFS
-#     if (r,c) not in coords:
-#         print('out of bounds')
-#         return
-#     elif layer[coords.index((r,c))].clr != currentcolour:
-#         print('different colour')
-#         return
-#     else: 
-#         layer[coords.index((r,c))].clr = currentClr
-#         directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
-#         for newr,newc in directions:
-#             if (newr,newc) in coords and layer[coords.index((newr,newc))].clr == currentcolour:
-#                 fill_bucket(newr,newc,currentcolour)
+            coord.append((i,j))
+    
+    return (layer,coord)
 
 def fill_bucket(r,c,currentcolour):
     #WITH BFS
@@ -89,19 +88,17 @@ def fill_bucket(r,c,currentcolour):
         #remove head node of queue
         r,c = q.dequeue()
         # if coord is in bounds and colour is unfilled
-        if (r,c) in coords and layer[coords.index((r,c))].clr == currentcolour:
+        if (r,c) in coords[currentLayer] and layerList[currentLayer][coords[currentLayer].index((r,c))].clr == currentcolour:
             #change colour
-            layer[coords.index((r,c))].clr = currentClr
+            layerList[currentLayer][coords[currentLayer].index((r,c))].clr = currentClr
             directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
             #enqueue all directions to queue
             for newr,newc in directions:
                 q.enqueue((newr,newc))
 
 
-init_canvas()
-
 ######## GLOBAL GAME VARIABLES ########## 
-layer = []
+layerList = []
 coords = []
 
 #int values
@@ -118,6 +115,7 @@ screen = pygame.display.set_mode((width, height))
 
 #bools and misc
 currentClr = BLACK
+currentLayer = 0
 inGame = True
 clicking = False
 ctrl = False
@@ -133,8 +131,25 @@ eraser = Button(25,125,50,50, eraserimg)
 bucket = Button(25,200,50,50, fillimg)
 eyedropper = Button(25,275,50,50, dropperimg)
 buttons = [pencil,eraser,bucket,eyedropper]
-pencil.click_button(25,50)
 
+#layer buttons
+layer1button = Button(horzMargin+canvasw+horzMargin//6 + 20, 210, horzMargin-horzMargin//3, 25)
+layer2button = Button(horzMargin+canvasw+horzMargin//6 + 20, 250, horzMargin-horzMargin//3, 25)
+layerButtons = [layer1button, layer2button]
+
+# layer visibility buttons
+layer1visible = Button(horzMargin+canvasw+horzMargin//12, 210, 25, 25, eyeimg,True)
+layer2visible = Button(horzMargin+canvasw+horzMargin//12, 250, 25, 25,eyeimg,True)
+layerVisibleButtons = [layer1visible, layer2visible]
+
+#starts off with pencil and layer 1
+pencil.click_button(25,50)
+layer1button.click_button(horzMargin+canvasw+horzMargin//6+20, 210)
+
+for l in layerButtons:
+    layerandcoords = create_new_layer()
+    layerList.append(layerandcoords[0])
+    coords.append(layerandcoords[1])
 
 ###### MAIN LOOP #######
 while inGame:
@@ -164,7 +179,34 @@ while inGame:
             if eyedropper.click_button(mousex,mousey):
                 print('eyedropper')
                 eyedropper.deactivate_others(buttons)
+            
+            #layer button presses
+            if layer1button.click_button(mousex,mousey):
+                currentLayer = 0
+                layer1button.deactivate_others(layerButtons)
+                print(currentLayer)
+            
+            if layer2button.click_button(mousex,mousey):
+                currentLayer = 1
+                layer2button.deactivate_others(layerButtons)
+                print(currentLayer)
 
+            #layer visibility buttons
+            if layer1visible.click_button(mousex,mousey, True):
+                layer1visible.isUsed = not layer1visible.isUsed
+
+                if layer1visible.clr == (40,40,45):
+                    layer1visible.clr = (90,90,95)
+                else:
+                    layer1visible.clr = (40,40,45)
+
+            if layer2visible.click_button(mousex,mousey, True):
+                layer2visible.isUsed = not layer2visible.isUsed
+
+                if layer2visible.clr == (40,40,45):
+                    layer2visible.clr = (90,90,95)
+                else:
+                    layer2visible.clr = (40,40,45)
         
         # ctrl-s to save
         if pressed[pygame.K_LCTRL]:
@@ -175,32 +217,31 @@ while inGame:
             ctrl = False
             pygame.image.save(screen,'newimage.png')
             
-
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
             clicking = False
 
     #is mouse is clicked and position in canvas bounds
-    if clicking and (mousey//gridsize,mousex//gridsize) in coords:
+    if clicking and (mousey//gridsize,mousex//gridsize) in coords[0]:
 
         if pencil.isUsed:
             #draw using current colour
-            layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = currentClr
+            layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr = currentClr
         
         if eraser.isUsed:
             #draw using white
-            layer[coords.index((mousey//gridsize,mousex//gridsize))].clr = WHITE
+            layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr = WHITE
 
         if bucket.isUsed:
             #screenshot colour before fill and pass it into function
-            colour_now = layer[coords.index((mousey//gridsize,mousex//gridsize))].clr
+            colour_now = layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr
             fill_bucket(mousey//gridsize,mousex//gridsize, colour_now)
 
         if eyedropper.isUsed:
             #set new positions of all sliders based on RBG
-            red_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[0])
-            green_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[1])
-            blue_slider.set_clr((layer[coords.index((mousey//gridsize,mousex//gridsize))].clr)[2])
+            red_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[0])
+            green_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[1])
+            blue_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[2])
 
 
     #mouse detection for colour sliders
@@ -211,5 +252,5 @@ while inGame:
     #changes current colour based on values from sliders
     currentClr = (red_slider.change_clr(), green_slider.change_clr(), blue_slider.change_clr())
         
-    redraw(screen,width,height,layer)
+    redraw(screen,width,height,layerList)
     clock.tick(framerate)
