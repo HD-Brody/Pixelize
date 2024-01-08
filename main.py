@@ -64,7 +64,7 @@ def redraw(screen, width, height, layerList):
     green_slider.draw_slider(screen, 5)
     blue_slider.draw_slider(screen, 5)
     pygame.display.update()
-
+#EDDIES FIRST COMMIT
 
 def create_new_layer():
     layer = []
