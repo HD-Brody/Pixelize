@@ -248,7 +248,8 @@ while inGame:
             #draw using current colour
             oldClr = layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr
             pixelchange = ((mousey//gridsize,mousex//gridsize), oldClr, currentClr)
-            action.append(pixelchange)
+            if pixelchange[1] != currentClr:
+                action.append(pixelchange)
             layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr = currentClr
 
         
