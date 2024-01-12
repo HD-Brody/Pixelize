@@ -15,9 +15,9 @@ class Button():
         if self.img:
             screen.blit(self.img,(self.x,self.y))
     
-    def click_button(self,mx,my, ownLogic = False):
+    def click_button(self,mx,my, ownLogic = ''):
         if self.box.collidepoint(mx,my):
-            if not ownLogic:
+            if ownLogic == '':
                 self.clr = (90,90,95)
                 self.isUsed = True
             return True

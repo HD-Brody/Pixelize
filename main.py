@@ -8,7 +8,7 @@ from sliderClass import *
 from queueClass import *
 pygame.init()
 from pygame.locals import QUIT
-
+from stackClass import *
 print(sys.getrecursionlimit())
 sys.setrecursionlimit(1500)
 
@@ -119,7 +119,8 @@ currentLayer = 0
 inGame = True
 clicking = False
 ctrl = False
-
+action = []
+moves = Stack()
 #sliders
 red_slider = Slider(horzMargin+canvasw+horzMargin//6, 120, horzMargin-horzMargin//3, RED)
 green_slider = Slider(horzMargin+canvasw+horzMargin//6, 150, horzMargin-horzMargin//3, GREEN)
@@ -130,7 +131,9 @@ pencil = Button(25,50,50,50, pencilimg)
 eraser = Button(25,125,50,50, eraserimg)
 bucket = Button(25,200,50,50, fillimg)
 eyedropper = Button(25,275,50,50, dropperimg)
-buttons = [pencil,eraser,bucket,eyedropper]
+clear = Button(25, 350, 50, 50,None)
+undo = Button(25, 425, 50, 50, None)
+buttons = [pencil,eraser,bucket,eyedropper, clear, undo]
 
 #layer buttons
 layer1button = Button(horzMargin+canvasw+horzMargin//6 + 20, 210, horzMargin-horzMargin//3, 25)
@@ -138,8 +141,8 @@ layer2button = Button(horzMargin+canvasw+horzMargin//6 + 20, 250, horzMargin-hor
 layerButtons = [layer1button, layer2button]
 
 # layer visibility buttons
-layer1visible = Button(horzMargin+canvasw+horzMargin//12, 210, 25, 25, eyeimg,True)
-layer2visible = Button(horzMargin+canvasw+horzMargin//12, 250, 25, 25,eyeimg,True)
+layer1visible = Button(horzMargin+canvasw+horzMargin//12, 210, 25, 25, eyeimg)
+layer2visible = Button(horzMargin+canvasw+horzMargin//12, 250, 25, 25,eyeimg)
 layerVisibleButtons = [layer1visible, layer2visible]
 
 #starts off with pencil and layer 1
@@ -150,7 +153,8 @@ for l in layerButtons:
     layerandcoords = create_new_layer()
     layerList.append(layerandcoords[0])
     coords.append(layerandcoords[1])
-
+for l in layerVisibleButtons:
+    l.click_button(l.x,l.y)
 ###### MAIN LOOP #######
 while inGame:
     mousex,mousey = pygame.mouse.get_pos()
@@ -163,7 +167,7 @@ while inGame:
         # used to check if buttons are pressed
         if event.type == pygame.MOUSEBUTTONDOWN:
             clicking = True
-
+            
             if bucket.click_button(mousex,mousey):
                 print('fill bucket')
                 bucket.deactivate_others(buttons)
@@ -175,6 +179,18 @@ while inGame:
             if eraser.click_button(mousex,mousey):
                 print('eraser')
                 eraser.deactivate_others(buttons)
+            
+            if clear.click_button(mousex,mousey,'clear'):
+                print('screen clear')
+                for i in layerList[currentLayer]:
+                    i.clr = WHITE
+            if undo.click_button(mousex, mousey):
+                print('undo')
+                if moves.size() > 0:
+                    undoneaction = moves.pop()
+                    for i in undoneaction:
+                        print(i)
+                        layerList[currentLayer][coords[currentLayer].index(i[0])].clr = i[1]
 
             if eyedropper.click_button(mousex,mousey):
                 print('eyedropper')
@@ -192,7 +208,7 @@ while inGame:
                 print(currentLayer)
 
             #layer visibility buttons
-            if layer1visible.click_button(mousex,mousey, True):
+            if layer1visible.click_button(mousex,mousey, 'layer'):
                 layer1visible.isUsed = not layer1visible.isUsed
 
                 if layer1visible.clr == (40,40,45):
@@ -200,7 +216,7 @@ while inGame:
                 else:
                     layer1visible.clr = (40,40,45)
 
-            if layer2visible.click_button(mousex,mousey, True):
+            if layer2visible.click_button(mousex,mousey, 'layer'):
                 layer2visible.isUsed = not layer2visible.isUsed
 
                 if layer2visible.clr == (40,40,45):
@@ -219,14 +235,22 @@ while inGame:
             
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
+            if len(action)>0:
+                moves.push(action)
             clicking = False
+            action = []
+
 
     #is mouse is clicked and position in canvas bounds
     if clicking and (mousey//gridsize,mousex//gridsize) in coords[0]:
 
         if pencil.isUsed:
             #draw using current colour
+            oldClr = layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr
+            pixelchange = ((mousey//gridsize,mousex//gridsize), oldClr, currentClr)
+            action.append(pixelchange)
             layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr = currentClr
+
         
         if eraser.isUsed:
             #draw using white
@@ -242,6 +266,10 @@ while inGame:
             red_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[0])
             green_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[1])
             blue_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[2])
+        
+            
+
+
 
 
     #mouse detection for colour sliders
@@ -254,3 +282,4 @@ while inGame:
         
     redraw(screen,width,height,layerList)
     clock.tick(framerate)
+
