@@ -9,9 +9,6 @@ from queueClass import *
 pygame.init()
 from pygame.locals import QUIT
 
-print(sys.getrecursionlimit())
-sys.setrecursionlimit(1500)
-
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 YELLOW = (255,255,0)
@@ -22,6 +19,8 @@ GRAY = (40,40,45)
 
 clock = pygame.time.Clock()
 framerate = 1000
+
+font = pygame.font.SysFont("Arial Black", 30)
 
 ###### IMAGES ######
 pencilimg = pygame.image.load('.\pencil.png')
@@ -34,12 +33,13 @@ dropperimg = pygame.image.load('.\eyedropper.png')
 dropperimg = pygame.transform.scale(dropperimg,(50,50))
 eyeimg = pygame.image.load('.\eye.png')
 eyeimg = pygame.transform.scale(eyeimg,(25,25))
-
+logoimg = pygame.image.load('.\logo.png')
+logoimg = pygame.transform.scale(logoimg,(400,400))
 
 ######## FUNCTIONS ########
 def redraw(screen, width, height, layerList):
     screen.fill((70, 70, 70))
-    pygame.draw.rect(screen, WHITE, (horzMargin,vertMargin,canvasw,canvash))
+    pygame.draw.rect(screen, WHITE, (layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash))
     #draws all pixels in canvas
     for i in range(len(layerList)):
         if layerVisibleButtons[i].isUsed:
@@ -53,9 +53,11 @@ def redraw(screen, width, height, layerList):
         lay.draw_button(screen)
     for vis in layerVisibleButtons:
         vis.draw_button(screen)
+    for bsb in brushSizeList:
+        bsb.draw_button(screen)
 
     #draws colour box that displays current colour
-    colour_box = pygame.Rect(horzMargin+canvasw+horzMargin//4,50,50,50)
+    colour_box = pygame.Rect(725,50,50,50)
     pygame.draw.rect(screen,currentClr,colour_box)
     pygame.draw.rect(screen,BLACK,colour_box,2)
 
@@ -65,6 +67,31 @@ def redraw(screen, width, height, layerList):
     blue_slider.draw_slider(screen, 5)
     pygame.display.update()
 
+def draw(mx, my, colour, bsize):
+    layerList[currentLayer][coords[currentLayer].index((my//gridsize,mx//gridsize))].clr = colour
+    if bsize == 2:
+        crds = [
+            (my//gridsize + 1,mx//gridsize),
+            (my//gridsize + 1,mx//gridsize + 1),
+            (my//gridsize,mx//gridsize + 1)
+        ]
+        for i in crds:
+            if i in coords[currentLayer]:
+                layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
+    if bsize == 3:
+        crds = [
+            (my//gridsize+1,mx//gridsize-1),
+            (my//gridsize+1,mx//gridsize),
+            (my//gridsize+1,mx//gridsize+1),
+            (my//gridsize,mx//gridsize-1),
+            (my//gridsize,mx//gridsize+1),
+            (my//gridsize-1,mx//gridsize-1),
+            (my//gridsize-1,mx//gridsize),
+            (my//gridsize-1,mx//gridsize+1),
+        ]
+        for i in crds:
+            if i in coords[currentLayer]:
+                layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
 
 def create_new_layer():
     layer = []
@@ -102,56 +129,121 @@ layerList = []
 coords = []
 
 #int values
-gridsize = 10
 width = 800
 height = 500
-canvasw = 600
-canvash = 400
-horzMargin = (width-canvasw)//2
-vertMargin = (height-canvash)//2
-print('number of pixels:', (canvash//gridsize) * (canvasw//gridsize))
-
 screen = pygame.display.set_mode((width, height))
 
 #bools and misc
+brushSize = 1
 currentClr = BLACK
 currentLayer = 0
-inGame = True
+startScreen = True
+inGame = False
 clicking = False
 ctrl = False
 
-#sliders
-red_slider = Slider(horzMargin+canvasw+horzMargin//6, 120, horzMargin-horzMargin//3, RED)
-green_slider = Slider(horzMargin+canvasw+horzMargin//6, 150, horzMargin-horzMargin//3, GREEN)
-blue_slider = Slider(horzMargin+canvasw+horzMargin//6, 180, horzMargin-horzMargin//3, BLUE)
 
-#buttons
-pencil = Button(25,50,50,50, pencilimg)
-eraser = Button(25,125,50,50, eraserimg)
-bucket = Button(25,200,50,50, fillimg)
-eyedropper = Button(25,275,50,50, dropperimg)
-buttons = [pencil,eraser,bucket,eyedropper]
 
-#layer buttons
-layer1button = Button(horzMargin+canvasw+horzMargin//6 + 20, 210, horzMargin-horzMargin//3, 25)
-layer2button = Button(horzMargin+canvasw+horzMargin//6 + 20, 250, horzMargin-horzMargin//3, 25)
-layerButtons = [layer1button, layer2button]
+#START SCREEN VARIABLES
+butWidth = 150
+createFileBut = Button(width//2 - butWidth//2, 400,butWidth,50)
 
-# layer visibility buttons
-layer1visible = Button(horzMargin+canvasw+horzMargin//12, 210, 25, 25, eyeimg,True)
-layer2visible = Button(horzMargin+canvasw+horzMargin//12, 250, 25, 25,eyeimg,True)
-layerVisibleButtons = [layer1visible, layer2visible]
-
-#starts off with pencil and layer 1
-pencil.click_button(25,50)
-layer1button.click_button(horzMargin+canvasw+horzMargin//6+20, 210)
-
-for l in layerButtons:
-    layerandcoords = create_new_layer()
-    layerList.append(layerandcoords[0])
-    coords.append(layerandcoords[1])
+slidWidth = 250
+widthSlider = Slider(width//2 - slidWidth//2, 250, slidWidth, WHITE, 15)
+heightSlider = Slider(width//2 - slidWidth//2, 300, slidWidth, WHITE,15)
+pixelSlider = Slider(width//2 - slidWidth//2, 350, slidWidth, WHITE,15)
 
 ###### MAIN LOOP #######
+while startScreen:
+    screen.fill((70, 70, 70))
+    screen.blit(logoimg,((width//2 - logoimg.get_width()//2), -50))
+    createFileBut.draw_button(screen)
+
+    canvasw = int(round(100 + widthSlider.change_clr(500),-1))
+    canvash = int(round(100 + heightSlider.change_clr(300),-1))
+    gridsize = int(round((5 + pixelSlider.change_clr(15))/5)*5)
+
+    for event in pygame.event.get():
+        pressed = pygame.key.get_pressed()
+        mousex,mousey = pygame.mouse.get_pos()
+
+        if event.type == QUIT:
+            pygame.quit()
+
+        # used to check if buttons are pressed
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            clicking = True
+            
+            if createFileBut.click_button(mousex,mousey):
+                canvash = round(canvash/gridsize)*gridsize
+                canvasw = round(canvasw/gridsize)*gridsize
+                horzMargin = (width-canvasw)//2
+                vertMargin = (height-canvash)//2
+
+                #sliders
+                red_slider = Slider(716, 120, 70, RED)
+                green_slider = Slider(716, 150, 70, GREEN)
+                blue_slider = Slider(716, 180, 70, BLUE)
+
+                #buttons
+                pencil = Button(25,50,50,50, pencilimg)
+                eraser = Button(25,125,50,50, eraserimg)
+                bucket = Button(25,200,50,50, fillimg)
+                eyedropper = Button(25,275,50,50, dropperimg)
+                buttons = [pencil,eraser,bucket,eyedropper]
+
+                brush1button = Button(25,height-40,25,25)
+                brush2button = Button(55,height-40,25,25)
+                brush3button = Button(85,height-40,25,25)
+                brushSizeList = [brush1button,brush2button,brush3button]
+
+                #layer buttons
+                layer1button = Button(737, 210, 60, 25)
+                layer2button = Button(737, 250, 60, 25)
+                layerButtons = [layer1button, layer2button]
+
+                # layer visibility buttons
+                layer1visible = Button(708, 210, 25, 25, eyeimg,True)
+                layer2visible = Button(708, 250, 25, 25,eyeimg,True)
+                layerVisibleButtons = [layer1visible, layer2visible]
+
+                #starts off with pencil and layer 1
+                pencil.click_button(pencil.x,pencil.y)
+                brush1button.click_button(brush1button.x,brush1button.y)
+                layer1button.click_button(layer1button.x, layer1button.y)
+
+                for l in layerButtons:
+                    layerandcoords = create_new_layer()
+                    layerList.append(layerandcoords[0])
+                    coords.append(layerandcoords[1])
+                
+                startScreen = False
+                inGame = True
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            clicking = False
+
+    for s in [widthSlider,heightSlider,pixelSlider]:
+        s.draw_slider(screen,30, BLACK, 5)
+        s.detect_mouse(clicking,mousex,mousey)
+
+    widthText = font.render(str("Canvas width: "), 1, WHITE)
+    heightText = font.render(str("Canvas height: "), 1, WHITE)
+    gridText = font.render(str("Grid size: "), 1, WHITE)
+    screen.blit(widthText,(25,240))
+    screen.blit(heightText,(15,290))
+    screen.blit(gridText,(100,340))
+
+    widthNum = font.render(str(canvasw), 1, WHITE)
+    heightNum = font.render(str(canvash), 1, WHITE)
+    gridNum = font.render(str(gridsize), 1, WHITE)
+    screen.blit(widthNum,(550,240))
+    screen.blit(heightNum,(550,290))
+    screen.blit(gridNum,(550,340))
+
+    pygame.display.update()
+    clock.tick(framerate)
+
 while inGame:
     mousex,mousey = pygame.mouse.get_pos()
     for event in pygame.event.get():
@@ -207,6 +299,17 @@ while inGame:
                     layer2visible.clr = (90,90,95)
                 else:
                     layer2visible.clr = (40,40,45)
+
+            #brush size buttons
+            if brush1button.click_button(mousex,mousey):
+                brushSize = 1
+                brush1button.deactivate_others(brushSizeList)
+            if brush2button.click_button(mousex,mousey):
+                brushSize = 2
+                brush2button.deactivate_others(brushSizeList)
+            if brush3button.click_button(mousex,mousey):
+                brushSize = 3
+                brush3button.deactivate_others(brushSizeList)
         
         # ctrl-s to save
         if pressed[pygame.K_LCTRL]:
@@ -215,7 +318,12 @@ while inGame:
         if ctrl and pressed[pygame.K_s]:
             print('save')
             ctrl = False
-            pygame.image.save(screen,'newimage.png')
+
+            rect = pygame.Rect(horzMargin,vertMargin,canvasw,canvash) 
+            sub = screen.subsurface(rect)
+            screenshot = pygame.Surface((canvasw, canvash))
+            screenshot.blit(sub, (0,0))
+            pygame.image.save(screenshot, "screenshot.jpg")
             
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
@@ -226,11 +334,11 @@ while inGame:
 
         if pencil.isUsed:
             #draw using current colour
-            layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr = currentClr
+            draw(mousex,mousey,currentClr,brushSize)
         
         if eraser.isUsed:
             #draw using white
-            layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr = WHITE
+            draw(mousex,mousey,WHITE,brushSize)
 
         if bucket.isUsed:
             #screenshot colour before fill and pass it into function
@@ -243,6 +351,7 @@ while inGame:
             green_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[1])
             blue_slider.set_clr((layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr)[2])
 
+    redraw(screen,width,height,layerList)
 
     #mouse detection for colour sliders
     red_slider.detect_mouse(clicking, mousex, mousey)
@@ -252,5 +361,4 @@ while inGame:
     #changes current colour based on values from sliders
     currentClr = (red_slider.change_clr(), green_slider.change_clr(), blue_slider.change_clr())
         
-    redraw(screen,width,height,layerList)
     clock.tick(framerate)
