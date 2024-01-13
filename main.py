@@ -8,6 +8,7 @@ from sliderClass import *
 from queueClass import *
 pygame.init()
 from pygame.locals import QUIT
+import time
 
 WHITE = (255,255,255)
 BLACK = (0,0,0)
@@ -31,10 +32,22 @@ fillimg = pygame.image.load('.\ebucket.png')
 fillimg = pygame.transform.scale(fillimg,(50,50))
 dropperimg = pygame.image.load('.\eyedropper.png')
 dropperimg = pygame.transform.scale(dropperimg,(50,50))
+
 eyeimg = pygame.image.load('.\eye.png')
 eyeimg = pygame.transform.scale(eyeimg,(25,25))
+
+saveimg = pygame.image.load('.\save.png')
+saveimg = pygame.transform.scale(saveimg,(50,50))
+
 logoimg = pygame.image.load('.\logo.png')
 logoimg = pygame.transform.scale(logoimg,(400,400))
+
+brush1img = pygame.image.load('.\size1brush.png')
+brush1img = pygame.transform.scale(brush1img,(25,25))
+brush2img = pygame.image.load('.\size2brush.png')
+brush2img = pygame.transform.scale(brush2img,(25,25))
+brush3img = pygame.image.load('.\size3brush.png')
+brush3img = pygame.transform.scale(brush3img,(25,25))
 
 ######## FUNCTIONS ########
 def redraw(screen, width, height, layerList):
@@ -143,6 +156,41 @@ inGame = False
 clicking = False
 ctrl = False
 
+
+#sliders
+red_slider = Slider(716, 120, 70, RED)
+green_slider = Slider(716, 150, 70, GREEN)
+blue_slider = Slider(716, 180, 70, BLUE)
+
+#buttons
+pencil = Button(25,50,50,50, pencilimg)
+eraser = Button(25,125,50,50, eraserimg)
+bucket = Button(25,200,50,50, fillimg)
+eyedropper = Button(25,275,50,50, dropperimg)
+buttons = [pencil,eraser,bucket,eyedropper]
+
+brush1button = Button(25,height-40,25,25,brush1img)
+brush2button = Button(55,height-40,25,25,brush2img)
+brush3button = Button(85,height-40,25,25,brush3img)
+brushSizeList = [brush1button,brush2button,brush3button]
+
+saveButton = Button(725,425,50,50, saveimg)
+
+#layer buttons
+layer1button = Button(737, 210, 60, 25)
+layer2button = Button(737, 250, 60, 25)
+layerButtons = [layer1button, layer2button]
+
+# layer visibility buttons
+layer1visible = Button(708, 210, 25, 25, eyeimg,True)
+layer2visible = Button(708, 250, 25, 25,eyeimg,True)
+layerVisibleButtons = [layer1visible, layer2visible]
+
+#starts off with pencil and layer 1
+pencil.click_button(pencil.x,pencil.y)
+brush1button.click_button(brush1button.x,brush1button.y)
+layer1button.click_button(layer1button.x, layer1button.y)
+
 #START SCREEN VARIABLES
 butWidth = 150
 createFileBut = Button(width//2 - butWidth//2, 400,butWidth,50)
@@ -179,40 +227,6 @@ while startScreen:
                 horzMargin = (width-canvasw)//2
                 vertMargin = (height-canvash)//2
 
-                #sliders
-                red_slider = Slider(716, 120, 70, RED)
-                green_slider = Slider(716, 150, 70, GREEN)
-                blue_slider = Slider(716, 180, 70, BLUE)
-
-                #buttons
-                pencil = Button(25,50,50,50, pencilimg)
-                eraser = Button(25,125,50,50, eraserimg)
-                bucket = Button(25,200,50,50, fillimg)
-                eyedropper = Button(25,275,50,50, dropperimg)
-                buttons = [pencil,eraser,bucket,eyedropper]
-
-                brush1button = Button(25,height-40,25,25)
-                brush2button = Button(55,height-40,25,25)
-                brush3button = Button(85,height-40,25,25)
-                brushSizeList = [brush1button,brush2button,brush3button]
-
-                saveButton = Button(725,425,50,50)
-
-                #layer buttons
-                layer1button = Button(737, 210, 60, 25)
-                layer2button = Button(737, 250, 60, 25)
-                layerButtons = [layer1button, layer2button]
-
-                # layer visibility buttons
-                layer1visible = Button(708, 210, 25, 25, eyeimg,True)
-                layer2visible = Button(708, 250, 25, 25,eyeimg,True)
-                layerVisibleButtons = [layer1visible, layer2visible]
-
-                #starts off with pencil and layer 1
-                pencil.click_button(pencil.x,pencil.y)
-                brush1button.click_button(brush1button.x,brush1button.y)
-                layer1button.click_button(layer1button.x, layer1button.y)
-
                 for l in layerButtons:
                     layerandcoords = create_new_layer()
                     layerList.append(layerandcoords[0])
@@ -244,6 +258,8 @@ while startScreen:
 
     pygame.display.update()
     clock.tick(framerate)
+
+time.sleep(0.1)
 
 while inGame:
     mousex,mousey = pygame.mouse.get_pos()
