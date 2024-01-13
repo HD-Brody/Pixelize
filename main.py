@@ -55,6 +55,7 @@ def redraw(screen, width, height, layerList):
         vis.draw_button(screen)
     for bsb in brushSizeList:
         bsb.draw_button(screen)
+    saveButton.draw_button(screen)
 
     #draws colour box that displays current colour
     colour_box = pygame.Rect(725,50,50,50)
@@ -142,8 +143,6 @@ inGame = False
 clicking = False
 ctrl = False
 
-
-
 #START SCREEN VARIABLES
 butWidth = 150
 createFileBut = Button(width//2 - butWidth//2, 400,butWidth,50)
@@ -196,6 +195,8 @@ while startScreen:
                 brush2button = Button(55,height-40,25,25)
                 brush3button = Button(85,height-40,25,25)
                 brushSizeList = [brush1button,brush2button,brush3button]
+
+                saveButton = Button(725,425,50,50)
 
                 #layer buttons
                 layer1button = Button(737, 210, 60, 25)
@@ -310,6 +311,14 @@ while inGame:
             if brush3button.click_button(mousex,mousey):
                 brushSize = 3
                 brush3button.deactivate_others(brushSizeList)
+
+            #misc buttons
+            if saveButton.click_button(mousex,mousey):
+                rect = pygame.Rect(layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash) 
+                sub = screen.subsurface(rect)
+                screenshot = pygame.Surface((canvasw, canvash))
+                screenshot.blit(sub, (0,0))
+                pygame.image.save(screenshot, "screenshot.jpg")
         
         # ctrl-s to save
         if pressed[pygame.K_LCTRL]:
