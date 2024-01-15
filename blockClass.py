@@ -6,7 +6,8 @@ class Square():
         self.col = col
         self.clr = clr
         self.screen = screen
-        self.square = pygame.Rect((self.col * size, self.row * size), (size, size))
+        self.size = size
+        self.square = pygame.Rect((self.col * self.size, self.row * self.size), (self.size, self.size))
     
     def draw_block(self):
         if self.clr != (255,255,255):
