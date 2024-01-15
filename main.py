@@ -8,6 +8,7 @@ from sliderClass import *
 from queueClass import *
 pygame.init()
 from pygame.locals import QUIT
+from stackClass import *
 import time
 
 WHITE = (255,255,255)
@@ -155,8 +156,8 @@ startScreen = True
 inGame = False
 clicking = False
 ctrl = False
-
-
+action = []
+moves = Stack()
 #sliders
 red_slider = Slider(716, 120, 70, RED)
 green_slider = Slider(716, 150, 70, GREEN)
@@ -167,7 +168,9 @@ pencil = Button(25,50,50,50, pencilimg)
 eraser = Button(25,125,50,50, eraserimg)
 bucket = Button(25,200,50,50, fillimg)
 eyedropper = Button(25,275,50,50, dropperimg)
-buttons = [pencil,eraser,bucket,eyedropper]
+clear = Button(25, 350, 50, 50,None)
+undo = Button(25, 425, 50, 50, None)
+buttons = [pencil,eraser,bucket,eyedropper, clear, undo]
 
 brush1button = Button(25,height-40,25,25,brush1img)
 brush2button = Button(55,height-40,25,25,brush2img)
@@ -231,7 +234,8 @@ while startScreen:
                     layerandcoords = create_new_layer()
                     layerList.append(layerandcoords[0])
                     coords.append(layerandcoords[1])
-                
+                for l in layerVisibleButtons:
+                    l.click_button(l.x,l.y)
                 startScreen = False
                 inGame = True
 
@@ -261,6 +265,7 @@ while startScreen:
 
 time.sleep(0.1)
 
+###### MAIN LOOP #######
 while inGame:
     mousex,mousey = pygame.mouse.get_pos()
     for event in pygame.event.get():
@@ -272,7 +277,7 @@ while inGame:
         # used to check if buttons are pressed
         if event.type == pygame.MOUSEBUTTONDOWN:
             clicking = True
-
+            
             if bucket.click_button(mousex,mousey):
                 print('fill bucket')
                 bucket.deactivate_others(buttons)
@@ -284,6 +289,18 @@ while inGame:
             if eraser.click_button(mousex,mousey):
                 print('eraser')
                 eraser.deactivate_others(buttons)
+            
+            if clear.click_button(mousex,mousey,'clear'):
+                print('screen clear')
+                for i in layerList[currentLayer]:
+                    i.clr = WHITE
+            if undo.click_button(mousex, mousey):
+                print('undo')
+                if moves.size() > 0:
+                    undoneaction = moves.pop()
+                    for i in undoneaction:
+                        print(i)
+                        layerList[currentLayer][coords[currentLayer].index(i[0])].clr = i[1]
 
             if eyedropper.click_button(mousex,mousey):
                 print('eyedropper')
@@ -301,7 +318,7 @@ while inGame:
                 print(currentLayer)
 
             #layer visibility buttons
-            if layer1visible.click_button(mousex,mousey, True):
+            if layer1visible.click_button(mousex,mousey, 'layer'):
                 layer1visible.isUsed = not layer1visible.isUsed
 
                 if layer1visible.clr == (40,40,45):
@@ -309,7 +326,7 @@ while inGame:
                 else:
                     layer1visible.clr = (40,40,45)
 
-            if layer2visible.click_button(mousex,mousey, True):
+            if layer2visible.click_button(mousex,mousey, 'layer'):
                 layer2visible.isUsed = not layer2visible.isUsed
 
                 if layer2visible.clr == (40,40,45):
@@ -352,15 +369,22 @@ while inGame:
             
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
+            if len(action)>0:
+                moves.push(action)
             clicking = False
+            action = []
+
 
     #is mouse is clicked and position in canvas bounds
     if clicking and (mousey//gridsize,mousex//gridsize) in coords[0]:
 
         if pencil.isUsed:
             #draw using current colour
-            draw(mousex,mousey,currentClr,brushSize)
-        
+            oldClr = layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr
+            pixelchange = ((mousey//gridsize,mousex//gridsize), oldClr, currentClr)
+            if pixelchange[1] != currentClr:
+                action.append(pixelchange)
+            draw(mousex,mousey,currentClr,brushSize)        
         if eraser.isUsed:
             #draw using white
             draw(mousex,mousey,WHITE,brushSize)
@@ -387,3 +411,4 @@ while inGame:
     currentClr = (red_slider.change_clr(), green_slider.change_clr(), blue_slider.change_clr())
         
     clock.tick(framerate)
+
