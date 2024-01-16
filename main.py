@@ -25,29 +25,29 @@ framerate = 1000
 font = pygame.font.SysFont("Arial Black", 30)
 
 ###### IMAGES ######
-pencilimg = pygame.image.load('.\pencil.png')
+pencilimg = pygame.image.load('images\pencil.png')
 pencilimg = pygame.transform.scale(pencilimg,(50,50))
-eraserimg = pygame.image.load('.\eraser.png')
+eraserimg = pygame.image.load('images\eraser.png')
 eraserimg = pygame.transform.scale(eraserimg,(50,50))
-fillimg = pygame.image.load('.\ebucket.png')
+fillimg = pygame.image.load('images\ebucket.png')
 fillimg = pygame.transform.scale(fillimg,(50,50))
-dropperimg = pygame.image.load('.\eyedropper.png')
+dropperimg = pygame.image.load('images\eyedropper.png')
 dropperimg = pygame.transform.scale(dropperimg,(50,50))
 
-eyeimg = pygame.image.load('.\eye.png')
+eyeimg = pygame.image.load('images\eye.png')
 eyeimg = pygame.transform.scale(eyeimg,(25,25))
 
-saveimg = pygame.image.load('.\save.png')
+saveimg = pygame.image.load('images\save.png')
 saveimg = pygame.transform.scale(saveimg,(50,50))
 
-logoimg = pygame.image.load('.\logo.png')
+logoimg = pygame.image.load('images\logo.png')
 logoimg = pygame.transform.scale(logoimg,(400,400))
 
-brush1img = pygame.image.load('.\size1brush.png')
+brush1img = pygame.image.load('images\size1brush.png')
 brush1img = pygame.transform.scale(brush1img,(25,25))
-brush2img = pygame.image.load('.\size2brush.png')
+brush2img = pygame.image.load('images\size2brush.png')
 brush2img = pygame.transform.scale(brush2img,(25,25))
-brush3img = pygame.image.load('.\size3brush.png')
+brush3img = pygame.image.load('images\size3brush.png')
 brush3img = pygame.transform.scale(brush3img,(25,25))
 
 ######## FUNCTIONS ########
@@ -82,8 +82,14 @@ def redraw(screen, width, height, layerList):
     blue_slider.draw_slider(screen, 5)
     pygame.display.update()
 
-def draw(mx, my, colour, bsize):
+def draw(mx, my, colour, bsize, oldClr):
     layerList[currentLayer][coords[currentLayer].index((my//gridsize,mx//gridsize))].clr = colour
+
+    pixelchange = ((my//gridsize,mx//gridsize), oldClr, currentClr)
+
+    if pixelchange[1] != currentClr:
+        action.append(pixelchange)
+
     if bsize == 2:
         crds = [
             (my//gridsize + 1,mx//gridsize),
@@ -93,6 +99,9 @@ def draw(mx, my, colour, bsize):
         for i in crds:
             if i in coords[currentLayer]:
                 layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
+            if oldClr != currentClr:
+                action.append((i, oldClr, currentClr))
+
     if bsize == 3:
         crds = [
             (my//gridsize+1,mx//gridsize-1),
@@ -107,6 +116,8 @@ def draw(mx, my, colour, bsize):
         for i in crds:
             if i in coords[currentLayer]:
                 layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
+            if oldClr != currentClr:
+                action.append((i, oldClr, currentClr))
 
 def create_new_layer():
     layer = []
@@ -294,12 +305,12 @@ while inGame:
                 print('screen clear')
                 for i in layerList[currentLayer]:
                     i.clr = WHITE
+
             if undo.click_button(mousex, mousey):
                 print('undo')
                 if moves.size() > 0:
                     undoneaction = moves.pop()
                     for i in undoneaction:
-                        print(i)
                         layerList[currentLayer][coords[currentLayer].index(i[0])].clr = i[1]
 
             if eyedropper.click_button(mousex,mousey):
@@ -381,10 +392,8 @@ while inGame:
         if pencil.isUsed:
             #draw using current colour
             oldClr = layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr
-            pixelchange = ((mousey//gridsize,mousex//gridsize), oldClr, currentClr)
-            if pixelchange[1] != currentClr:
-                action.append(pixelchange)
-            draw(mousex,mousey,currentClr,brushSize)        
+            draw(mousex,mousey,currentClr,brushSize, oldClr)
+
         if eraser.isUsed:
             #draw using white
             draw(mousex,mousey,WHITE,brushSize)
