@@ -33,9 +33,12 @@ fillimg = pygame.image.load('images\ebucket.png')
 fillimg = pygame.transform.scale(fillimg,(50,50))
 dropperimg = pygame.image.load('images\eyedropper.png')
 dropperimg = pygame.transform.scale(dropperimg,(50,50))
-
+clearimg = pygame.image.load('images\clear canvas.png')
+clearimg = pygame.transform.scale(clearimg, (50,50))
 eyeimg = pygame.image.load('images\eye.png')
 eyeimg = pygame.transform.scale(eyeimg,(25,25))
+undoimg = pygame.image.load('images\eundo.png')
+undoimg = pygame.transform.scale(undoimg, (50,50))
 
 saveimg = pygame.image.load('images\save.png')
 saveimg = pygame.transform.scale(saveimg,(50,50))
@@ -179,13 +182,13 @@ pencil = Button(25,50,50,50, pencilimg)
 eraser = Button(25,125,50,50, eraserimg)
 bucket = Button(25,200,50,50, fillimg)
 eyedropper = Button(25,275,50,50, dropperimg)
-clear = Button(25, 350, 50, 50,None)
-undo = Button(25, 425, 50, 50, None)
+clear = Button(25, 350, 50, 50, clearimg)
+undo = Button(25, 425, 50, 50, undoimg)
 buttons = [pencil,eraser,bucket,eyedropper, clear, undo]
 
-brush1button = Button(25,height-40,25,25,brush1img)
-brush2button = Button(55,height-40,25,25,brush2img)
-brush3button = Button(85,height-40,25,25,brush3img)
+brush1button = Button(95,height-40,25,25,brush1img)
+brush2button = Button(125,height-40,25,25,brush2img)
+brush3button = Button(155,height-40,25,25,brush3img)
 brushSizeList = [brush1button,brush2button,brush3button]
 
 saveButton = Button(725,425,50,50, saveimg)
