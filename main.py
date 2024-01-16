@@ -98,10 +98,10 @@ def draw(mx, my, colour, bsize, oldClr):
         ]
         for i in crds:
             if i in coords[currentLayer]:
-                layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
-            if oldClr != currentClr:
-                action.append((i, oldClr, currentClr))
-
+                if layerList[currentLayer][coords[currentLayer].index(i)].clr != currentClr:
+                    action.append((i, layerList[currentLayer][coords[currentLayer].index(i)].clr, currentClr))
+                    layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
+            
     if bsize == 3:
         crds = [
             (my//gridsize+1,mx//gridsize-1),
@@ -115,9 +115,9 @@ def draw(mx, my, colour, bsize, oldClr):
         ]
         for i in crds:
             if i in coords[currentLayer]:
-                layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
-            if oldClr != currentClr:
-                action.append((i, oldClr, currentClr))
+                if layerList[currentLayer][coords[currentLayer].index(i)].clr != currentClr:
+                    action.append((i, layerList[currentLayer][coords[currentLayer].index(i)].clr, currentClr))
+                    layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
 
 def create_new_layer():
     layer = []
@@ -396,7 +396,8 @@ while inGame:
 
         if eraser.isUsed:
             #draw using white
-            draw(mousex,mousey,WHITE,brushSize)
+            oldClr = layerList[currentLayer][coords[currentLayer].index((mousey//gridsize,mousex//gridsize))].clr
+            draw(mousex,mousey,WHITE,brushSize, oldClr)
 
         if bucket.isUsed:
             #screenshot colour before fill and pass it into function
