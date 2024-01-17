@@ -388,7 +388,26 @@ while inGame:
                 pygame.image.save(screenshot, "newImg.jpg")
                 makeTransparent("newImg.jpg")
             
-            
+        # ctrl-s to save
+        if pressed[pygame.K_LCTRL]:
+            ctrl = True
+        
+        if ctrl:
+            if pressed[pygame.K_s]:
+                ctrl = False
+                rect = pygame.Rect(layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash) 
+                sub = screen.subsurface(rect)
+                screenshot = pygame.Surface((canvasw, canvash))
+                screenshot.blit(sub, (0,0))
+                pygame.image.save(screenshot, "newImg.jpg")
+                makeTransparent("newImg.jpg")
+            if pressed[pygame.K_z]:
+                if moves.size() > 0:
+                    undoneaction = moves.pop()
+                    for i in undoneaction:
+                        layerList[currentLayer][coords[currentLayer].index(i[0])].clr = i[1]
+                
+        
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
             if len(action)>0:
