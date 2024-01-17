@@ -2,6 +2,7 @@ import sys
 import random
 import time
 import pygame
+from PIL import Image
 from blockClass import *
 from buttonClass import *
 from sliderClass import *
@@ -88,9 +89,9 @@ def redraw(screen, width, height, layerList):
 def draw(mx, my, colour, bsize, oldClr):
     layerList[currentLayer][coords[currentLayer].index((my//gridsize,mx//gridsize))].clr = colour
 
-    pixelchange = ((my//gridsize,mx//gridsize), oldClr, currentClr)
+    pixelchange = ((my//gridsize,mx//gridsize), oldClr, colour)
 
-    if pixelchange[1] != currentClr:
+    if pixelchange[1] != colour:
         action.append(pixelchange)
 
     if bsize == 2:
@@ -101,8 +102,8 @@ def draw(mx, my, colour, bsize, oldClr):
         ]
         for i in crds:
             if i in coords[currentLayer]:
-                if layerList[currentLayer][coords[currentLayer].index(i)].clr != currentClr:
-                    action.append((i, layerList[currentLayer][coords[currentLayer].index(i)].clr, currentClr))
+                if layerList[currentLayer][coords[currentLayer].index(i)].clr != colour:
+                    action.append((i, layerList[currentLayer][coords[currentLayer].index(i)].clr, colour))
                     layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
             
     if bsize == 3:
@@ -118,8 +119,8 @@ def draw(mx, my, colour, bsize, oldClr):
         ]
         for i in crds:
             if i in coords[currentLayer]:
-                if layerList[currentLayer][coords[currentLayer].index(i)].clr != currentClr:
-                    action.append((i, layerList[currentLayer][coords[currentLayer].index(i)].clr, currentClr))
+                if layerList[currentLayer][coords[currentLayer].index(i)].clr != colour:
+                    action.append((i, layerList[currentLayer][coords[currentLayer].index(i)].clr, colour))
                     layerList[currentLayer][coords[currentLayer].index(i)].clr = colour
 
 def create_new_layer():
@@ -146,12 +147,31 @@ def fill_bucket(r,c,currentcolour):
         # if coord is in bounds and colour is unfilled
         if (r,c) in coords[currentLayer] and layerList[currentLayer][coords[currentLayer].index((r,c))].clr == currentcolour:
             #change colour
+            if layerList[currentLayer][coords[currentLayer].index((r,c))].clr != currentClr:
+                    action.append(((r,c), layerList[currentLayer][coords[currentLayer].index((r,c))].clr, currentClr))
             layerList[currentLayer][coords[currentLayer].index((r,c))].clr = currentClr
             directions = ((r-1,c),(r,c+1),(r+1,c),(r,c-1))
             #enqueue all directions to queue
-            for newr,newc in directions:
-                q.enqueue((newr,newc))
-
+            for i in directions:
+                q.enqueue(i)
+                
+def makeTransparent(imageName):
+    img = Image.open(imageName)
+    img = img.convert("RGBA")
+ 
+    datas = img.getdata()
+ 
+    newData = []
+ 
+    for item in datas:
+        if item[0] in range(230,256) and item[1] in range(230,256) and item[2] in range(230,256):
+            newData.append((255, 255, 255, 0))
+        else:
+            newData.append(item)
+ 
+    img.putdata(newData)
+    img.save("./transparentImg.png", "PNG")
+    print("Successful")
 
 ######## GLOBAL GAME VARIABLES ########## 
 layerList = []
@@ -216,6 +236,9 @@ slidWidth = 250
 widthSlider = Slider(width//2 - slidWidth//2, 250, slidWidth, WHITE, 15)
 heightSlider = Slider(width//2 - slidWidth//2, 300, slidWidth, WHITE,15)
 pixelSlider = Slider(width//2 - slidWidth//2, 350, slidWidth, WHITE,15)
+
+widthSlider.mx += widthSlider.width
+heightSlider.mx += heightSlider.width
 
 ###### MAIN LOOP #######
 while startScreen:
@@ -365,22 +388,29 @@ while inGame:
                 sub = screen.subsurface(rect)
                 screenshot = pygame.Surface((canvasw, canvash))
                 screenshot.blit(sub, (0,0))
-                pygame.image.save(screenshot, "screenshot.jpg")
-        
+                pygame.image.save(screenshot, "newImg.jpg")
+                makeTransparent("newImg.jpg")
+            
         # ctrl-s to save
         if pressed[pygame.K_LCTRL]:
             ctrl = True
         
-        if ctrl and pressed[pygame.K_s]:
-            print('save')
-            ctrl = False
-
-            rect = pygame.Rect(horzMargin,vertMargin,canvasw,canvash) 
-            sub = screen.subsurface(rect)
-            screenshot = pygame.Surface((canvasw, canvash))
-            screenshot.blit(sub, (0,0))
-            pygame.image.save(screenshot, "screenshot.jpg")
-            
+        if ctrl:
+            if pressed[pygame.K_s]:
+                ctrl = False
+                rect = pygame.Rect(layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash) 
+                sub = screen.subsurface(rect)
+                screenshot = pygame.Surface((canvasw, canvash))
+                screenshot.blit(sub, (0,0))
+                pygame.image.save(screenshot, "newImg.jpg")
+                makeTransparent("newImg.jpg")
+            if pressed[pygame.K_z]:
+                if moves.size() > 0:
+                    undoneaction = moves.pop()
+                    for i in undoneaction:
+                        layerList[currentLayer][coords[currentLayer].index(i[0])].clr = i[1]
+                
+        
         # if release mouse button
         if event.type == pygame.MOUSEBUTTONUP:
             if len(action)>0:
