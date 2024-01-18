@@ -10,10 +10,15 @@ class Button():
         self.clr = (40,40,45)
         self.isUsed = isUsed
 
-    def draw_button(self,screen):
+    def draw_button(self,screen, txt = ''):
+        font = pygame.font.SysFont("Arial Black", 13)
         pygame.draw.rect(screen,self.clr,self.box)
         if self.img:
             screen.blit(self.img,(self.x,self.y))
+        if txt != '':
+            text = font.render(txt, 1, (255,255,255))
+            screen.blit(text,(self.x+5,self.y+2))
+
     
     def click_button(self,mx,my, ownLogic = ''):
         if self.box.collidepoint(mx,my):

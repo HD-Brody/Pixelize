@@ -67,12 +67,13 @@ def redraw(screen, width, height, layerList):
     #draws all buttons in ui
     for button in buttons:
         button.draw_button(screen)
-    for lay in layerButtons:
-        lay.draw_button(screen)
     for vis in layerVisibleButtons:
         vis.draw_button(screen)
     for bsb in brushSizeList:
         bsb.draw_button(screen)
+    layer1button.draw_button(screen,'Layer 1')
+    layer2button.draw_button(screen,'Layer 2')
+    
     saveButton.draw_button(screen)
 
     #draws colour box that displays current colour
@@ -214,13 +215,13 @@ brushSizeList = [brush1button,brush2button,brush3button]
 saveButton = Button(725,425,50,50, saveimg)
 
 #layer buttons
-layer1button = Button(737, 210, 60, 25)
-layer2button = Button(737, 250, 60, 25)
+layer1button = Button(737, 250, 60, 25)
+layer2button = Button(737, 210, 60, 25)
 layerButtons = [layer1button, layer2button]
 
 # layer visibility buttons
-layer1visible = Button(708, 210, 25, 25, eyeimg,True)
-layer2visible = Button(708, 250, 25, 25,eyeimg,True)
+layer1visible = Button(708, 250, 25, 25,eyeimg,True)
+layer2visible = Button(708, 210, 25, 25, eyeimg,True)
 layerVisibleButtons = [layer1visible, layer2visible]
 
 #starts off with pencil and layer 1
@@ -297,6 +298,9 @@ while startScreen:
     screen.blit(heightNum,(550,290))
     screen.blit(gridNum,(550,340))
 
+    startText = font.render("New file",1,WHITE)
+    screen.blit(startText,(333,400))
+
     pygame.display.update()
     clock.tick(framerate)
 
@@ -332,7 +336,7 @@ while inGame:
                 for i in layerList[currentLayer]:
                     i.clr = WHITE
 
-            if undo.click_button(mousex, mousey):
+            if undo.click_button(mousex, mousey, 'undo'):
                 print('undo')
                 if moves.size() > 0:
                     undoneaction = moves.pop()
@@ -454,4 +458,3 @@ while inGame:
     currentClr = (red_slider.change_clr(), green_slider.change_clr(), blue_slider.change_clr())
         
     clock.tick(framerate)
-
