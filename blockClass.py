@@ -10,5 +10,6 @@ class Square():
         self.square = pygame.Rect((self.col * self.size, self.row * self.size), (self.size, self.size))
     
     def draw_block(self):
+        #only draw if pixel not white
         if self.clr != (255,255,255):
             pygame.draw.rect(self.screen, self.clr, self.square)

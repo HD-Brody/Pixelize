@@ -57,6 +57,7 @@ brush3img = pygame.transform.scale(brush3img,(25,25))
 ######## FUNCTIONS ########
 def redraw(screen, width, height, layerList):
     screen.fill((70, 70, 70))
+    # draw white rectangle (canvas background)
     pygame.draw.rect(screen, WHITE, (layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash))
     #draws all pixels in canvas
     for i in range(len(layerList)):
@@ -88,10 +89,12 @@ def redraw(screen, width, height, layerList):
     pygame.display.update()
 
 def draw(mx, my, colour, bsize, oldClr):
+    #draw pixel at mouse pos
     layerList[currentLayer][coords[currentLayer].index((my//gridsize,mx//gridsize))].clr = colour
 
     pixelchange = ((my//gridsize,mx//gridsize), oldClr, colour)
 
+    # if current colour not colour at pos, add to undo stack
     if pixelchange[1] != colour:
         action.append(pixelchange)
 
@@ -164,6 +167,7 @@ def makeTransparent(imageName):
  
     newData = []
  
+    # if pixel is white or light grey, set opacity to 0
     for item in datas:
         if item[0] in range(230,256) and item[1] in range(230,256) and item[2] in range(230,256):
             newData.append((255, 255, 255, 0))
@@ -262,6 +266,7 @@ while startScreen:
         if event.type == pygame.MOUSEBUTTONDOWN:
             clicking = True
             
+            #initializes canvas, layers, and ui based on user inputted values
             if createFileBut.click_button(mousex,mousey):
                 canvash = round(canvash/gridsize)*gridsize
                 canvasw = round(canvasw/gridsize)*gridsize
@@ -284,6 +289,8 @@ while startScreen:
         s.draw_slider(screen,30, BLACK, 5)
         s.detect_mouse(clicking,mousex,mousey)
 
+
+    #texts
     widthText = font.render(str("Canvas width: "), 1, WHITE)
     heightText = font.render(str("Canvas height: "), 1, WHITE)
     gridText = font.render(str("Grid size: "), 1, WHITE)
@@ -304,7 +311,7 @@ while startScreen:
     pygame.display.update()
     clock.tick(framerate)
 
-time.sleep(0.1)
+time.sleep(0.2)
 
 ###### MAIN LOOP #######
 while inGame:
@@ -319,6 +326,7 @@ while inGame:
         if event.type == pygame.MOUSEBUTTONDOWN:
             clicking = True
             
+            #tool buttons
             if bucket.click_button(mousex,mousey):
                 print('fill bucket')
                 bucket.deactivate_others(buttons)
@@ -347,7 +355,7 @@ while inGame:
                 print('eyedropper')
                 eyedropper.deactivate_others(buttons)
             
-            #layer button presses
+            #layer buttons
             if layer1button.click_button(mousex,mousey):
                 currentLayer = 0
                 layer1button.deactivate_others(layerButtons)
@@ -395,11 +403,11 @@ while inGame:
                 pygame.image.save(screenshot, "newImg.jpg")
                 makeTransparent("newImg.jpg")
             
-        # ctrl-s to save
         if pressed[pygame.K_LCTRL]:
             ctrl = True
         
         if ctrl:
+            # ctrl-s to save
             if pressed[pygame.K_s]:
                 ctrl = False
                 rect = pygame.Rect(layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash) 
@@ -408,6 +416,7 @@ while inGame:
                 screenshot.blit(sub, (0,0))
                 pygame.image.save(screenshot, "newImg.jpg")
                 makeTransparent("newImg.jpg")
+            # ctrl-z to undo
             if pressed[pygame.K_z]:
                 if moves.size() > 0:
                     undoneaction = moves.pop()

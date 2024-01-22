@@ -13,14 +13,17 @@ class Button():
     def draw_button(self,screen, txt = ''):
         font = pygame.font.SysFont("Arial Black", 13)
         pygame.draw.rect(screen,self.clr,self.box)
+        # if there is an img, blit img
         if self.img:
             screen.blit(self.img,(self.x,self.y))
+        # if there is txt, blit txt
         if txt != '':
             text = font.render(txt, 1, (255,255,255))
             screen.blit(text,(self.x+5,self.y+2))
 
     
     def click_button(self,mx,my, ownLogic = ''):
+        # if click button, button is used and change button colour
         if self.box.collidepoint(mx,my):
             if ownLogic == '':
                 self.clr = (90,90,95)

@@ -15,8 +15,10 @@ class Slider():
         self.hitbox = pygame.Rect(self.mx-self.radius, (self.top+height/2) - self.radius, self.radius * 2, self.radius * 2)
     
     def detect_mouse(self,mouseIsDown, mx, my):
+        # if clicking on slider
         if mouseIsDown and self.hitbox.collidepoint(mx,my):
             self.mx = mx
+            #move slider within boundaries
             if self.mx < self.left:
                 self.mx = self.left
             elif self.mx > self.left + self.width:
@@ -29,6 +31,7 @@ class Slider():
         return increase
 
     def set_clr(self,RGB_value):
+        #set slider position based on colour (used for eyedropper)
         self.mx = RGB_value * self.proportion + self.left
 
 
