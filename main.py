@@ -11,7 +11,7 @@ pygame.init()
 from pygame.locals import QUIT
 from stackClass import *
 import time
-
+import os
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 YELLOW = (255,255,0)
@@ -19,6 +19,7 @@ GREEN = (0,255,0)
 RED = (255,0,0)
 BLUE = (0,0,255)
 GRAY = (40,40,45)
+counter = 1
 
 clock = pygame.time.Clock()
 framerate = 1000
@@ -159,7 +160,7 @@ def fill_bucket(r,c,currentcolour):
             for i in directions:
                 q.enqueue(i)
                 
-def makeTransparent(imageName):
+def makeTransparent(imageName, newName):
     img = Image.open(imageName)
     img = img.convert("RGBA")
  
@@ -175,7 +176,7 @@ def makeTransparent(imageName):
             newData.append(item)
  
     img.putdata(newData)
-    img.save("./transparentImg.png", "PNG")
+    img.save("./" + newName, "PNG")
     print("Successful")
 
 ######## GLOBAL GAME VARIABLES ########## 
@@ -191,12 +192,18 @@ screen = pygame.display.set_mode((width, height))
 brushSize = 1
 currentClr = BLACK
 currentLayer = 0
+
 startScreen = True
 inGame = False
 clicking = False
 ctrl = False
+
 action = []
 moves = Stack()
+
+filename = "newImg"
+transparentname = "newTransparent"
+
 #sliders
 red_slider = Slider(716, 120, 70, RED)
 green_slider = Slider(716, 150, 70, GREEN)
@@ -396,12 +403,24 @@ while inGame:
 
             #misc buttons
             if saveButton.click_button(mousex,mousey):
+                tempfilename = filename
+                temptransname = transparentname
                 rect = pygame.Rect(layerList[0][0].col * gridsize, layerList[0][0].row * gridsize,canvasw,canvash) 
                 sub = screen.subsurface(rect)
                 screenshot = pygame.Surface((canvasw, canvash))
                 screenshot.blit(sub, (0,0))
-                pygame.image.save(screenshot, "newImg.jpg")
-                makeTransparent("newImg.jpg")
+
+                if os.path.exists(filename + ".png"):
+                    tempfilename += str(counter)
+                    
+    
+                if os.path.exists(transparentname + ".png"):
+                    temptransname += str(counter)
+                counter += 1
+
+                pygame.image.save(screenshot, tempfilename + ".png")
+                makeTransparent(tempfilename + ".png",temptransname + ".png")
+
             
         if pressed[pygame.K_LCTRL]:
             ctrl = True
